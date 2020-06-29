@@ -1,6 +1,9 @@
 const { agent, prepare, getLoggedInUser } = require('../lib/data-helper/data-helper');
 
 const Post = require('../lib/models/Post');
+const User = require('../lib/models/User');
+const app = require('../lib/app');
+const request = require('supertest');
 
 
 describe('Post routes', () => {
@@ -25,5 +28,32 @@ describe('Post routes', () => {
           __v: 0
         });
       });
+  });
+
+  it('GET all posts', async() => {
+    const posts = prepare(await Post.find());
+
+    return request(app)
+      .get('/api/v1/posts')
+      .then(res => {
+        expect(res.body).toEqual(posts);
+      });
+  });
+
+  it('GET by id and comments and user', async() => {
+    const post = prepare(await Post.findOne());
+    const user = prepare(await User.findOne({ _id: post.user }));
+    // const comments = prepare(await Comment.find({ post: post._id }));
+
+    return request(app)
+      .get(`/api/v1/posts/${post._id}`)
+      .then(res => {
+        expect(res.body).toEqual({
+          ...post, 
+          user
+          // comment: //map over comment 
+        });
+      });
+
   });
 });
