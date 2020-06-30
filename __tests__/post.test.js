@@ -6,6 +6,7 @@ const app = require('../lib/app');
 const request = require('supertest');
 
 
+
 describe('Post routes', () => {
   it('creates a post', async() => {
 
@@ -55,5 +56,76 @@ describe('Post routes', () => {
         });
       });
 
+  });
+
+  it('updates a post via PATCH', async() => {
+      
+    const createdPost = await agent
+      .post('/api/v1/posts')
+      .send({
+        photoUrl: 'www.test.com',
+        caption: 'test caption sentence',
+        tags: ['testtag']
+      })
+      .then(res => res.body);
+
+    return agent
+      .patch(`/api/v1/posts/${createdPost._id}`)
+      .send({ caption: 'changed caption' })
+      .then(res => {
+        expect(res.body).toEqual({
+          ...createdPost,
+          caption: 'changed caption'
+        });
+      });
+  });
+
+  it('does not update a post from a verified user', async() => {
+    const createdPost = await agent
+      .post('/api/v1/posts')
+      .send({
+        photoUrl: 'www.test.com',
+        caption: 'test caption sentence',
+        tags: ['testtag']
+      })
+      .then(res => res.body);
+      
+    const loginTester = request.agent(app);
+
+    await loginTester
+      .post('/api/v1/auth/login')
+      .send({
+        username: 'test1@test.com',
+        password: 'password'
+      });
+
+    return loginTester
+      .patch(`/api/v1/posts/${createdPost._id}`)
+      .send({ caption: 'changed caption' })
+      .then(res => {
+        expect(res.body).toEqual({
+          message: 'error',
+          status: 500
+        });
+      });
+  });
+
+  it('DELETE a post by id by its verified user', async() => {
+    const createdPost = await agent
+      .post('/api/v1/posts')
+      .send({
+        photoUrl: 'www.test.com',
+        caption: 'test caption sentence',
+        tags: ['testtag']
+      })
+      .then(res => res.body);
+
+    return agent
+      .delete(`/api/v1/posts/${createdPost._id}`)
+      .then(res => {
+        expect(res.body).toEqual({
+          ...createdPost
+        });
+      });
   });
 });
