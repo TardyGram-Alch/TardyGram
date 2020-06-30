@@ -2,6 +2,7 @@ const { agent, prepare, getLoggedInUser } = require('../lib/data-helper/data-hel
 
 const Post = require('../lib/models/Post');
 const User = require('../lib/models/User');
+const Comment = require('../lib/models/Comment');
 const app = require('../lib/app');
 const request = require('supertest');
 
@@ -42,15 +43,15 @@ describe('Post routes', () => {
   it('GET by id and comments and user', async() => {
     const post = prepare(await Post.findOne());
     const user = prepare(await User.findOne({ _id: post.user }));
-    // const comments = prepare(await Comment.find({ post: post._id }));
+    const comments = prepare(await Comment.find({ post: post._id }).populate({ path: 'commentBy', select: { username: true } }));
 
     return request(app)
       .get(`/api/v1/posts/${post._id}`)
       .then(res => {
         expect(res.body).toEqual({
           ...post, 
-          user
-          // comment: //map over comment 
+          user,
+          comments: [...comments]
         });
       });
 
@@ -124,6 +125,21 @@ describe('Post routes', () => {
         expect(res.body).toEqual({
           ...createdPost
         });
+      });
+  });
+
+  it('responds with a list of the 10 posts with the most comments', () => {
+    return request(app)
+      .get('/api/v1/posts/popular')
+      .then(res => {
+        expect(res.body).toEqual(res.body.map(() => ({
+          _id: expect.anything(),
+          allComments: expect.any(Number),
+          caption: expect.any(String),
+          photoUrl: expect.any(String),
+          user: expect.any(String)
+        })));
+        expect(res.body).toHaveLength(10);
       });
   });
 });
