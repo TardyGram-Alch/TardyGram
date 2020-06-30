@@ -5,8 +5,6 @@ const User = require('../lib/models/User');
 const app = require('../lib/app');
 const request = require('supertest');
 
-
-
 describe('Post routes', () => {
   it('creates a post', async() => {
 
