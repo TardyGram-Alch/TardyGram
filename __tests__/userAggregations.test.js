@@ -1,7 +1,4 @@
-const { agent, prepare, getLoggedInUser } = require('../lib/data-helper/data-helper');
-const User = require('../lib/models/User');
-const Post = require('../lib/models/Post');
-const Comment = require('../lib/models/Comment');
+require('../lib/data-helper/data-helper');
 const app = require('../lib/app');
 const request = require('supertest');
 
